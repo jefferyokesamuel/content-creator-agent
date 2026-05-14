@@ -57,5 +57,23 @@ cron:
   enabled: true
 CONFIGEOF
 
+# Start a minimal health server so Railway knows the container is alive
+# (the gateway uses outbound polling, not inbound HTTP)
+echo "=== Starting health server on port 8080 ==="
+python3 -c "
+import http.server, threading
+
+class HealthHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'OK')
+    def log_message(self, *a):
+        pass
+
+server = http.server.HTTPServer(('0.0.0.0', 8080), HealthHandler)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+" &
+
 echo "=== Starting Hermes Gateway ==="
 exec hermes gateway run --accept-hooks
