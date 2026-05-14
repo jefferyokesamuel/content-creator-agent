@@ -3,9 +3,6 @@ set -e
 
 echo "=== Content Creator Agent Starting ==="
 
-# Ensure .hermes directory exists
-mkdir -p /root/.hermes
-
 # Check for required env vars
 if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
   echo "ERROR: TELEGRAM_BOT_TOKEN is not set"
@@ -18,6 +15,7 @@ if [ -z "$DEEPSEEK_API_KEY" ]; then
 fi
 
 # Build the .env file from environment variables
+mkdir -p /root/.hermes
 cat > /root/.hermes/.env << EOF
 DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
 TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -74,15 +72,6 @@ memory:
 cron:
   enabled: true
 CONFIGEOF
-
-# Copy skills if they exist
-SKILLS_SRC="/app/skills"
-SKILLS_DST="/root/.hermes/skills"
-if [ -d "$SKILLS_SRC" ]; then
-  mkdir -p "$SKILLS_DST"
-  cp -r "$SKILLS_SRC/"* "$SKILLS_DST/" 2>/dev/null || true
-  echo "Skills copied from $SKILLS_SRC"
-fi
 
 echo "=== Starting Hermes Gateway ==="
 exec hermes gateway run --accept-hooks

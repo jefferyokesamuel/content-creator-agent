@@ -14,9 +14,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/
 ENV PATH="/root/.local/bin:${PATH}"
 ENV HERMES_HOME="/root/.hermes"
 
-# Copy pre-configured files
-COPY config.yaml /root/.hermes/config.yaml
-COPY .env /root/.hermes/.env
+# Copy skills and entrypoint
 COPY skills/ /root/.hermes/skills/
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
