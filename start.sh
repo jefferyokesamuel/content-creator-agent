@@ -3,23 +3,7 @@ set -e
 
 echo "=== Content Creator Agent Starting ==="
 
-# Check for required env vars
-if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-  echo "ERROR: TELEGRAM_BOT_TOKEN is not set"
-  exit 1
-fi
-
-if [ -z "$DEEPSEEK_API_KEY" ]; then
-  echo "ERROR: DEEPSEEK_API_KEY is not set"
-  exit 1
-fi
-
-# Build the .env file from environment variables
 mkdir -p /root/.hermes
-cat > /root/.hermes/.env << EOF
-DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-EOF
 
 # Build config.yaml
 cat > /root/.hermes/config.yaml << 'CONFIGEOF'
