@@ -5,8 +5,10 @@ echo "=== Content Creator Agent Starting ==="
 
 mkdir -p /root/.hermes
 
-# Build config.yaml
-cat > /root/.hermes/config.yaml << 'CONFIGEOF'
+# Build config.yaml with token injected directly from env
+# (Hermes reads TELEGRAM_BOT_TOKEN from os.getenv, but Railway env vars
+# may not propagate to Python processes as expected — so we write it inline)
+cat > /root/.hermes/config.yaml << CONFIGEOF
 model:
   default: deepseek-chat
   provider: deepseek
@@ -48,6 +50,7 @@ platform_toolsets:
 platforms:
   telegram:
     enabled: true
+    token: "${TELEGRAM_BOT_TOKEN}"
     reply_to_mode: "first"
 
 memory:
@@ -59,7 +62,6 @@ cron:
 CONFIGEOF
 
 # Start a minimal health server so Railway knows the container is alive
-# (the gateway uses outbound polling, not inbound HTTP)
 echo "=== Starting health server on port 8080 ==="
 python3 -c "
 import http.server, threading
@@ -76,16 +78,12 @@ server = http.server.HTTPServer(('0.0.0.0', 8080), HealthHandler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 " &
 
-# Debug: check environment and config before starting gateway
 echo "=== DEBUG: Checking environment ==="
 echo "TELEGRAM_BOT_TOKEN set: $([ -n \"$TELEGRAM_BOT_TOKEN\" ] && echo YES || echo NO)"
 echo "DEEPSEEK_API_KEY set: $([ -n \"$DEEPSEEK_API_KEY\" ] && echo YES || echo NO)"
-echo "GATEWAY_ALLOW_ALL_USERS: ${GATEWAY_ALLOW_ALL_USERS:-unset}"
-echo "=== DEBUG: Config file content ==="
-cat /root/.hermes/config.yaml
-echo ""
+echo "=== DEBUG: Config file token line ==="
+grep "token:" /root/.hermes/config.yaml
 
 echo "=== Starting Hermes Gateway ==="
-# Allow open access (or set GATEWAY_ALLOW_ALL_USERS=true in Railway vars)
 export GATEWAY_ALLOW_ALL_USERS=${GATEWAY_ALLOW_ALL_USERS:-true}
 exec hermes gateway run --accept-hooks
